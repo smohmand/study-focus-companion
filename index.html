@@ -1,0 +1,48 @@
+<!--
+File: app.py
+Project: Study & Focus Companion
+Description: Flask backend handling server routing and text processing logic for summaries and flashcards.
+Author: Hackathon Team(Shaheer Mohmand, Milan Bennett, Driss Jouhari)
+Date: October 2026
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study & Focus Companion</title>
+    <!-- Link to external CSS stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <!-- Main Application Container -->
+    <div class="container">
+        <header>
+            <h1>Study & Focus Companion</h1>
+            <p>Transform dense text into instant flashcards and stay focused.</p>
+        </header>
+
+        <!-- Input Section for Study Notes -->
+        <section class="input-section">
+            <textarea id="studyInput" placeholder="Paste your study notes or article text here..."></textarea>
+            <button id="processBtn">Generate Study Materials</button>
+        </section>
+
+        <!-- Output Section: Summaries & Flashcards -->
+        <section class="output-section">
+            <div class="card summary-card">
+                <h3>Summary</h3>
+                <p id="summaryOutput">Your generated summary will appear here...</p>
+            </div>
+
+            <div class="card flashcard-container">
+                <h3>Flashcards</h3>
+                <div id="flashcardOutput">Flashcards will appear here...</div>
+            </div>
+        </section>
+    </div>
+
+</body>
+</html>
