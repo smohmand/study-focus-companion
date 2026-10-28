@@ -5,10 +5,12 @@ Description: Flask backend handling server routing and text processing logic for
 Author: Hackathon Team(Shaheer Mohmand, Milan Bennett, Driss Jouhari)
 Date: October 2026
 """
-
+import os
 from flask import Flask, render_template, request, jsonify
 
-app = Flask(__name__, template_folder='.', static_folder='.')
+
+
+app = Flask(__name__, template_folder='.', static_folder='.', static_url_path='')
 
 # ==========================================
 # ROUTING LOGIC
