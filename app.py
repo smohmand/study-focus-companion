@@ -11,6 +11,9 @@ import json
 from flask import Flask, render_template, request, jsonify
 from dotenv import load_dotenv
 
+# SWITCH TO FALSE WHEN HOSTED, TRUE FOR TESTING
+DEV_MODE = True
+
 # Load local environment variables if a .env file exists
 load_dotenv()
 
@@ -28,7 +31,8 @@ if API_KEY:
         from google.genai import types
         client = genai.Client(api_key=API_KEY)
     except Exception as e:
-        print(f"GenAI SDK not initialized: {e}")
+        if DEV_MODE == True:
+            print(f"GenAI SDK not initialized: {e}")
 
 # Initialize Flask with template and static folders mapped to the root directory
 app = Flask(__name__)
@@ -51,7 +55,7 @@ def process_text():
 
     mock_reason = "no API key or SDK not initialized"
 
-    # If the Gemini client is initialized, use the real LLM
+    # If the Gem client is initialized, use the real LLM
     if client:
         try:
             prompt = f"""
@@ -110,4 +114,4 @@ def process_text():
 
 # Run the local development server
 if __name__ == '__main__':
-    app.run(debug=True, port=5381)
+    app.run(debug=DEV_MODE, port=5381)
