@@ -5,25 +5,37 @@ Description: Flask backend handling server routing with optional Gemini AI integ
 Author(s):  Git Push and Pray (Milan Bennett, Shaheer Mohmand)
 Date: October 2026
 """
-import sys
 import os
 import json
+import time
+from datetime import date
 from flask import Flask, render_template, request, jsonify
 from dotenv import load_dotenv
+from flask_limiter import Limiter
 
-# SWITCH TO FALSE WHEN HOSTED, TRUE FOR TESTING
-DEV_MODE = True
+import time
+from werkzeug.serving import WSGIRequestHandler
 
-# Load local environment variables if a .env file exists
+class TimedHandler(WSGIRequestHandler):
+    def run_wsgi(self):
+        self._start = time.time()
+        super().run_wsgi()
+
+    def log_request(self, code="-", size="-"):
+        elapsed = time.time() - getattr(self, "_start", time.time())
+        super().log_request(code, f"{size} ({elapsed:.2f}s)")
+
 load_dotenv()
 
-# Safely check for the Gemini API key without crashing if it's missing
+# Off by default. Only set DEV_MODE=true in your local .env, never on Render
+DEV_MODE = os.getenv("DEV_MODE", "false").lower() == "true"
+
+MAX_INPUT_CHARS = 8000
+DAILY_CAP = 300
+MODEL_NAME = os.getenv("GEMINI_MODEL", "gemini-3.6-flash")
+
 API_KEY = os.getenv("GEMINI_API_KEY")
 client = None
-
-
-print("Python being used:", sys.executable)
-print("Key found:", API_KEY is not None)
 
 if API_KEY:
     try:
@@ -31,32 +43,53 @@ if API_KEY:
         from google.genai import types
         client = genai.Client(api_key=API_KEY)
     except Exception as e:
-        if DEV_MODE == True:
-            print(f"GenAI SDK not initialized: {e}")
+        print(f"GenAI SDK not initialized: {e}" if DEV_MODE else "GenAI SDK not initialized")
+else:
+    print("No GEMINI_API_KEY found, running in basic mode")
 
-# Initialize Flask with template and static folders mapped to the root directory
 app = Flask(__name__)
+
+
+def client_ip():
+    # Render sits behind a proxy, so the real visitor IP is in X-Forwarded-For
+    forwarded = request.headers.get("X-Forwarded-For", "")
+    return forwarded.split(",")[0].strip() or request.remote_addr or "unknown"
+
+
+limiter = Limiter(client_ip, app=app, default_limits=[])
+
+usage = {"day": date.today(), "count": 0}
+
+
+def over_daily_cap():
+    today = date.today()
+    if usage["day"] != today:
+        usage["day"] = today
+        usage["count"] = 0
+    usage["count"] += 1
+    return usage["count"] > DAILY_CAP
+
 
 @app.route('/')
 def home():
     return render_template('index.html')
 
-# ==========================================
-# ROUTING LOGIC
-# ==========================================
 
 @app.route('/process-text', methods=['POST'])
+@limiter.limit("5 per minute")
 def process_text():
-    data = request.get_json() if request.is_json else {}
-    user_text = data.get('text', '').strip()
+    data = request.get_json(silent=True) or {}
+    user_text = str(data.get('text', '')).strip()
 
     if not user_text:
         return jsonify({'summary': 'Please provide text.', 'flashcards': []})
 
+    user_text = user_text[:MAX_INPUT_CHARS]
     mock_reason = "no API key or SDK not initialized"
 
-    # If the Gem client is initialized, use the real LLM
-    if client:
+    if client and over_daily_cap():
+        mock_reason = "demo limit reached for today"
+    elif client:
         try:
             prompt = f"""
             Analyze the following text and provide:
@@ -71,7 +104,7 @@ def process_text():
             """
 
             response = client.models.generate_content(
-                model='gemini-3.8-flash',
+                model=MODEL_NAME,
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json",
@@ -85,8 +118,8 @@ def process_text():
             })
 
         except Exception as e:
-            print(f"Gemini API error: {e}")
-            mock_reason = f"Gemini error: {e}"
+            print(f"Gemini API error: {e}")  # stays in server logs
+            mock_reason = f"Gemini error: {e}" if DEV_MODE else "AI temporarily unavailable"
 
     # --- FALLBACK MODE ---
     sentences = [s.strip() for s in user_text.split('.') if s.strip()]
@@ -112,6 +145,11 @@ def process_text():
         'flashcards': flashcards
     })
 
-# Run the local development server
+    return jsonify({
+        'summary': f"[Basic Mode - {mock_reason}] {summary}",
+        'flashcards': flashcards
+    })
+
+
 if __name__ == '__main__':
-    app.run(debug=DEV_MODE, port=5381)
+    app.run(debug=DEV_MODE, port=5381, request_handler=TimedHandler)
