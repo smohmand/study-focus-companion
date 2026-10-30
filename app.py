@@ -36,9 +36,9 @@ app = Flask(__name__, template_folder='.', static_folder='.', static_url_path=''
 @app.route('/')
 def home():
     """
-    Renders the main frontend dashboard (temlates/index.html).
+    Renders the main frontend dashboard (temletes/index.html).
     """
-    return render_template('index.html')
+    return render_template('templates/index.html')
 
 # ==========================================
 # API ENDPOINTS
