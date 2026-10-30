@@ -2,7 +2,7 @@
 File: app.py
 Project: Study & Focus Companion
 Description: Flask backend handling server routing with optional Gemini AI integration.
-Authors: Hackathon Team(Shaheer Mohmand, Milan Bennett)
+Author(s):  Git Push and Pray (Milan Bennett, Shaheer Mohmand)
 Date: October 2026
 """
 import sys

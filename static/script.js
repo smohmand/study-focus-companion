@@ -2,7 +2,7 @@
 File: script.js
 Project: Study & Focus Companion
 Description: Handles backend API calls and Pomodoro timer countdown logic.
-Author: Milan Bennett
+Author(s):  Git Push and Pray (Milan Bennett, Shaheer Mohmand)
 Date: October 2026
 */
 
@@ -71,6 +71,8 @@ document.getElementById('processBtn').addEventListener('click', async () => {
             body: JSON.stringify({ text: textValue })
         });
 
+        if (!response.ok) throw new Error(`Server error: ${response.status}`);
+
         const data = await response.json();
         summaryElement.textContent = data.summary;
 
@@ -78,11 +80,26 @@ document.getElementById('processBtn').addEventListener('click', async () => {
         data.flashcards.forEach((card, index) => {
             const cardDiv = document.createElement('div');
             cardDiv.className = 'flashcard-item';
-            cardDiv.innerHTML = `<strong>Q${index + 1}:</strong> ${card.question}<br><em>A:</em> ${card.answer}`;
+
+            const inner = document.createElement('div');
+            inner.className = 'flashcard-inner';
+
+            const front = document.createElement('div');
+            front.className = 'flashcard-face flashcard-front';
+            front.textContent = `Q${index + 1}: ${card.question}`;
+
+            const back = document.createElement('div');
+            back.className = 'flashcard-face flashcard-back';
+            back.textContent = card.answer;
+
+            inner.append(front, back);
+            cardDiv.appendChild(inner);
+            cardDiv.addEventListener('click', () => cardDiv.classList.toggle('flipped'));
             flashcardElement.appendChild(cardDiv);
         });
     } catch (error) {
         console.error('Error connecting to backend:', error);
         summaryElement.textContent = 'Failed to generate materials.';
+        flashcardElement.textContent = '';
     }
 });
