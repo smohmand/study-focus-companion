@@ -4,9 +4,6 @@ Transform overwhelming text into concise summaries and actionable flashcards in 
 
 Team Members:  Milan Bennett, Shaheer Mohmand
 
-GitHub Repository: https://github.com/smohmand/study-focus-companion
-
-Live Site / Demo: 
 
 1. Pitch, Problem, and Solution
 
