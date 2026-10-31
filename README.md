@@ -37,8 +37,15 @@ Future Roadmap
 
 While built within hackathon constraints, potential future enhancements include:
 
+Concurrent Requests: Upgrading the backend architecture to support handling multiple simultaneous requests efficiently.
+
 Infrastructure: Deploying on dedicated cloud hosting for higher availability.
 
 Customization: Allowing users to choose the exact count and difficulty of flashcards.
 
 UI & Export: Adding enhanced graphic themes and export options (PDF / Anki).
+
+Acknowledgements & Disclosures:
+
+* AI Assistance:** This project was developed with assistance from Google's Gemini models for code debugging.
+* SDK Integration:** Core text summarization and flashcard generation features leverage the official **Google GenAI SDK** (`gemini-3.5-flash`).
